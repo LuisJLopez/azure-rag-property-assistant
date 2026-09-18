@@ -17,9 +17,7 @@ Create a **Property Knowledge Assistant** that can answer questions such as:
 
 The assistant must answer only from the documents uploaded for the prototype, show citations, distinguish sourced facts from general explanation, and say when the indexed material does not contain the answer.
 
-## Why this is a good substitute for a portfolio assistant
-
-It exercises the same core technical pattern without using company intellectual property:
+## Why this is worth doing:
 
 1. Source documents represent domain knowledge.
 2. Blob Storage holds the originals.
