@@ -8,6 +8,8 @@ not financial or property advice.
 
 ![Grounded, cited answer comparing flats and houses](screenshots/05-flats-vs-houses-comparison.png)
 
+![knowledge_base_retrieve trace: query in, retrieved chunk out](screenshots/06-knowledge-base-retrieve-payload.png)
+
 Full spec: [01-property-assistant-idea-and-goal.md](01-property-assistant-idea-and-goal.md).
 
 ## What this does
