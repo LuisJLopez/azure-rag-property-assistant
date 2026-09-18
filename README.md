@@ -100,6 +100,3 @@ Working end to end: 4 documents indexed (391 chunks), grounded answers with
 inline citations, sourced-vs-general distinction, and knowledge-base
 retrieval confirmed via traces. Full detail in
 [learning_plan_status.md](learning_plan_status.md).
-
-![Grounded answer with citation](screenshots/02-grounded-luis-colour-answer.png)
-![Trace showing the knowledge_base_retrieve tool call](screenshots/03-trace-knowledge-base-retrieve.png)
