@@ -70,7 +70,7 @@ independently, and a RAG pipeline always uses both:
 ## What the response actually looks like
 
 Calling an embedding deployment (via the OpenAI-compatible endpoint, same
-pattern as [chat.py](azure_model_deployment/chat.py)) returns JSON shaped
+pattern as [chat.py](foundry_scripts/chat.py)) returns JSON shaped
 roughly like this:
 
 ```json

@@ -1,5 +1,5 @@
 [project]
-name = "azure-model-deployment"
+name = "foundry-scripts"
 version = "0.1.0"
 description = "Sanity-check script for a deployed Foundry chat model"
 requires-python = ">=3.12"

@@ -75,7 +75,7 @@ embedding skill didn't reliably call a deployment hosted on an
 ## Repo layout
 
 - [scripts/](scripts/) — downloads the source PDFs and uploads them to Blob Storage
-- [azure_model_deployment/](azure_model_deployment/) — sanity-check scripts for both model deployments, plus a hand-rolled RAG loop (embed → cosine similarity retrieval → generate) that proves the concept before the real index exists
+- [foundry_scripts/](foundry_scripts/) — sanity-check scripts for both model deployments, plus a hand-rolled RAG loop (embed → cosine similarity retrieval → generate) that proves the concept before the real index exists
 - [screenshots/](screenshots/) — evidence of the working pipeline
 
 ## Setup
@@ -84,7 +84,7 @@ Requires [uv](https://docs.astral.sh/uv/) and `az login`.
 
 ```bash
 cd scripts && uv sync && uv run upload_docs.py
-cd ../azure_model_deployment && uv sync && uv run chat.py "your question"
+cd ../foundry_scripts && uv sync && uv run chat.py "your question"
 ```
 
 ## Docs

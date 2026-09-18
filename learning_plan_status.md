@@ -36,4 +36,4 @@ Progress against [02-getting-started-plan.md](02-getting-started-plan.md).
 ## Repo layout
 
 - [scripts/](scripts/) — uv project, `upload_docs.py` downloads + uploads the source PDFs
-- [azure_model_deployment/](azure_model_deployment/) — uv project, `chat.py` / `embed.py` sanity-check the two deployments, `mini_rag_demo.py` is a hand-rolled RAG loop (embed → cosine similarity retrieval → generate) proving the concept before the real Search index exists
+- [foundry_scripts/](foundry_scripts/) — uv project, `chat.py` / `embed.py` sanity-check the two deployments, `mini_rag_demo.py` is a hand-rolled RAG loop (embed → cosine similarity retrieval → generate) proving the concept before the real Search index exists

@@ -1,4 +1,4 @@
-# azure_model_deployment
+# foundry_scripts
 
 Sanity-check script for a deployed Foundry chat model.
 
@@ -7,7 +7,7 @@ Sanity-check script for a deployed Foundry chat model.
 Requires [uv](https://docs.astral.sh/uv/).
 
 ```bash
-cd azure_model_deployment
+cd foundry_scripts
 uv sync
 cp .env.example .env   # then edit with your endpoint + deployment name
 ```
