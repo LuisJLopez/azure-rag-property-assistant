@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Property Knowledge Assistant</title>
+  <meta name="description" content="A one-day RAG prototype that answers questions about UK property documents, with citations, built on Azure AI Search and Microsoft Foundry.">
+  <meta property="og:title" content="Property Knowledge Assistant">
+  <meta property="og:description" content="A one-day Azure RAG learning project: Blob Storage, indexing, chunking, embeddings, hybrid retrieval and grounded generation — plus the real bug that was found and fixed.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%236d4df2'/%3E%3Cpath d='M9 22V10l7 7 7-7v12' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script>
+    (function () {
+      var stored = null;
+      try { stored = localStorage.getItem('theme'); } catch (e) {}
+      var theme = stored || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a class="brand" href="#top" aria-label="Property Knowledge Assistant, back to top">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-text">property-kb</span>
+      </a>
+      <nav class="topnav" aria-label="Sections">
+        <a href="#pipeline">Pipeline</a>
+        <a href="#bug">Bug story</a>
+        <a href="#evidence">Evidence</a>
+        <a href="#learned">Learned</a>
+        <a href="#code">Code</a>
+      </nav>
+      <div class="topbar-actions">
+        <button class="theme-toggle" type="button" aria-label="Switch to light theme" data-theme-toggle>
+          <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+        </button>
+        <a class="btn btn-ghost btn-sm" href="https://github.com/LuisJLopez/azure-rag-property-assistant" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <!-- 1. Hero -->
+    <section class="hero" id="top">
+      <div class="container">
+        <p class="eyebrow">One-day learning prototype · Azure AI Search + Microsoft Foundry</p>
+        <h1>Property Knowledge Assistant</h1>
+        <p class="lede">A RAG prototype that answers questions about UK property documents — <em>with citations</em> — built on Azure AI Search and Microsoft Foundry.</p>
+        <p class="sub">Built to learn Blob Storage, indexing, chunking, embeddings, hybrid retrieval and grounded generation. Not a production system, not financial advice.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="https://github.com/LuisJLopez/azure-rag-property-assistant" rel="noopener">View on GitHub</a>
+          <a class="btn btn-ghost" href="#bug">Read the bug story</a>
+        </div>
+
+        <ul class="stats" aria-label="Key numbers">
+          <li class="stat"><span class="stat-value" data-count="5">5</span><span class="stat-label">documents indexed</span></li>
+          <li class="stat"><span class="stat-value" data-count="391">391</span><span class="stat-label">chunks in the index</span></li>
+          <li class="stat"><span class="stat-value" data-count="1536">1536</span><span class="stat-label">dimensions per vector</span></li>
+          <li class="stat"><span class="stat-value" data-count="31">31</span><span class="stat-label">citations in one answer</span></li>
+          <li class="stat"><span class="stat-value" data-count="7">7</span><span class="stat-label">failed indexer runs before the fix</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 2. Pipeline -->
+    <section class="section" id="pipeline">
+      <div class="container">
+        <h2>The pipeline</h2>
+        <p class="section-intro">Documents go in one end; cited answers come out the other. Every node below is a real resource that was created and tested on the day.</p>
+
+        <ol class="flow" data-reveal-group>
+          <li class="node" data-reveal>
+            <div class="node-head"><span class="node-kicker">Source</span><h3>Public UK property PDFs</h3></div>
+            <p class="node-caption">Four public guides from gov.uk and parliament.uk: <em>How to Buy a Home</em>, <em>How to Lease</em>, the draft Commonhold &amp; Leasehold Reform Bill guide, and a Commons Library briefing on leasehold reform.</p>
+          </li>
+          <li class="node" data-reveal>
+            <div class="node-head"><span class="node-kicker">Storage</span><h3>Azure Blob Storage</h3></div>
+            <p class="node-caption"><code>stpropertykb001</code> / container <code>property-docs</code>. Holds the originals, unmodified. The indexer is the only thing that reads them.</p>
+          </li>
+          <li class="node" data-reveal>
+            <div class="node-head"><span class="node-kicker">Extract · chunk · embed</span><h3>Azure AI Search indexer + skillset</h3></div>
+            <p class="node-caption"><code>SplitSkill</code> cuts each PDF into ~2000-character chunks with 500 characters of overlap, then <code>AzureOpenAIEmbeddingSkill</code> calls <code>text-embedding-3-small</code> once per chunk to produce a 1536-dim vector.</p>
+          </li>
+          <li class="node" data-reveal>
+            <div class="node-head"><span class="node-kicker">Index</span><h3>Search index <code>property-kb</code></h3></div>
+            <p class="node-caption">391 rows — one per chunk — each holding the text, its vector and source metadata. Hybrid keyword + vector search with the semantic ranker enabled.</p>
+          </li>
+          <li class="node" data-reveal>
+            <div class="node-head"><span class="node-kicker">Knowledge</span><h3>Foundry IQ knowledge base <code>property-kb-knowledge</code></h3></div>
+            <p class="node-caption">Wraps the index so an agent can query it. Output mode set to <em>extractive</em>, so the agent receives raw retrieved passages and their source references, not a pre-summarised answer.</p>
+          </li>
+          <li class="node" data-reveal>
+            <div class="node-head"><span class="node-kicker">Agent</span><h3>Foundry agent <code>property-agent</code></h3></div>
+            <p class="node-caption">Runs on <code>gpt-5-mini</code>. Instructed to always search the knowledge base first, answer only from what comes back, and say so when nothing relevant is found.</p>
+          </li>
+          <li class="node node-end" data-reveal>
+            <div class="node-head"><span class="node-kicker">Output</span><h3>Grounded answer with citations</h3></div>
+            <p class="node-caption">Every claim carries an inline reference that resolves to a specific chunk in the index — a pointer to the evidence, not "trust me".</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 3. What it does -->
+    <section class="section section-alt" id="what">
+      <div class="container">
+        <h2>What it does</h2>
+        <ol class="steps">
+          <li><strong>Uploads 4 public UK property PDFs to Blob Storage</strong> via a small uv-managed Python script, authenticated with <code>az login</code> rather than stored keys.</li>
+          <li><strong>Azure AI Search chunks each PDF and generates one embedding per chunk</strong> through the integrated vectorization skillset.</li>
+          <li><strong>Chunks, vectors and source metadata land in a hybrid search index</strong> — 391 chunks in total.</li>
+          <li><strong>A Foundry agent queries the index at chat time</strong> and answers only from retrieved chunks, with inline citations back to the source document.</li>
+          <li><strong>A needle-in-a-haystack test:</strong> added a one-line document — <em>"Luis's favourite house colour is red"</em> — re-indexed, and the agent retrieved and cited that exact fact instead of guessing from general knowledge.</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 4. Bug story -->
+    <section class="section" id="bug">
+      <div class="container">
+        <h2>The bug story</h2>
+        <p class="section-intro">The most useful part of the day. The wizard-built indexer failed every single run at the embedding step — and every obvious explanation turned out to be wrong.</p>
+
+        <div class="bug-grid">
+          <ol class="timeline" data-reveal-group>
+            <li data-reveal>
+              <h3>Symptom</h3>
+              <p>Every indexer run died at <code>AzureOpenAIEmbeddingSkill</code> with <code>DeploymentNotFound</code> — seven failed runs between 12:07 and 14:23, each lasting 1 to 11 seconds. The blob read succeeded every time; only the embedding call failed.</p>
+            </li>
+            <li data-reveal>
+              <h3>Ruled out, one by one</h3>
+              <ul>
+                <li><strong>Managed-identity RBAC propagation.</strong> Granted <code>Cognitive Services OpenAI User</code> to the Search service's identity and waited 45+ minutes. Still failing.</li>
+                <li><strong>Authentication method.</strong> Switched the skill to an API key. The error changed to 401 once (a key for the wrong resource had been pasted), then back to <code>DeploymentNotFound</code>.</li>
+                <li><strong>The deployment itself.</strong> Direct REST calls to the same endpoint with the same key returned <code>200</code> and a real vector — every time.</li>
+                <li><strong>Deployment SKU.</strong> <code>GlobalStandard</code> is the only SKU offered for this model in any region, so it couldn't be the variable.</li>
+              </ul>
+            </li>
+            <li data-reveal>
+              <h3>Root cause</h3>
+              <p>The embedding model lived on a Microsoft Foundry resource of kind <strong><code>AIServices</code></strong> — the newer, unified multi-service type. Azure AI Search's embedding skill didn't reliably call it. A dedicated resource of kind <strong><code>OpenAI</code></strong> explicitly lists <code>Microsoft.Search</code> as a trusted service; the <code>AIServices</code> one didn't behave the same way.</p>
+            </li>
+            <li data-reveal>
+              <h3>Fix</h3>
+              <p>Created <code>property-kb-openai</code> (kind <code>OpenAI</code>, in <code>uksouth</code> — the same region as the Search service), deployed <code>text-embedding-3-small</code> there, and repointed the skillset. Next run: 4 of 4 documents, 0 errors, 3 minutes.</p>
+            </li>
+            <li data-reveal>
+              <h3>Lesson</h3>
+              <p class="callout">"Works when I call it directly" is not the same as "works when another Azure service calls it." Read the indexer's execution history, not the chat output.</p>
+            </li>
+          </ol>
+
+          <aside class="runs-card" aria-labelledby="runs-heading">
+            <h3 id="runs-heading">Indexer execution history</h3>
+            <p class="runs-sub">18 September 2026 · <code>property-kb-indexer</code></p>
+            <table class="runs">
+              <thead>
+                <tr><th scope="col">Status</th><th scope="col">Start</th><th scope="col">Duration</th><th scope="col">Docs</th></tr>
+              </thead>
+              <tbody>
+                <tr class="run-ok"><td><span class="pill pill-ok">Success</span></td><td>14:30:33</td><td>3 min</td><td>4 / 4</td></tr>
+                <tr><td><span class="pill pill-fail">Failed</span></td><td>14:23:55</td><td>1 s</td><td>0 / 1</td></tr>
+                <tr><td><span class="pill pill-fail">Failed</span></td><td>12:26:33</td><td>2 s</td><td>0 / 1</td></tr>
+                <tr><td><span class="pill pill-fail">Failed</span></td><td>12:24:01</td><td>631 ms</td><td>0 / 1</td></tr>
+                <tr><td><span class="pill pill-fail">Failed</span></td><td>12:18:55</td><td>3 s</td><td>0 / 1</td></tr>
+                <tr><td><span class="pill pill-fail">Failed</span></td><td>12:16:00</td><td>3 s</td><td>0 / 1</td></tr>
+                <tr><td><span class="pill pill-fail">Failed</span></td><td>12:10:43</td><td>3 s</td><td>0 / 1</td></tr>
+                <tr><td><span class="pill pill-fail">Failed</span></td><td>12:07:55</td><td>11 s</td><td>0 / 1</td></tr>
+              </tbody>
+            </table>
+            <p class="runs-note">Full write-up: <a href="https://github.com/LuisJLopez/azure-rag-property-assistant/blob/main/04-indexing-fix-notes.md" rel="noopener">04-indexing-fix-notes.md</a></p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Evidence -->
+    <section class="section section-alt" id="evidence">
+      <div class="container">
+        <h2>Evidence</h2>
+        <p class="section-intro">Screenshots from the Foundry playground and its trace view. Click any image to enlarge.</p>
+
+        <div class="gallery">
+          <figure class="shot shot-wide">
+            <button class="shot-btn" type="button" data-lightbox data-caption="Grounded, cited comparison of flats vs houses; every claim is tagged with a source document.">
+              <img src="assets/05-flats-vs-houses-comparison.png" width="3328" height="1878" alt="Foundry playground showing the agent's answer comparing flats and houses. Each bullet ends with numbered citation markers linking to the source documents." loading="lazy">
+            </button>
+            <figcaption>Grounded, cited comparison of flats vs houses — every claim tagged with a source document.</figcaption>
+          </figure>
+
+          <figure class="shot">
+            <button class="shot-btn" type="button" data-lightbox data-caption="The retrieval trace: the query going in, the retrieved chunk coming out.">
+              <img src="assets/06-knowledge-base-retrieve-payload.png" width="2774" height="1734" alt="Trace view of a knowledge_base_retrieve tool call. The input shows the query 'Compare the reported considerations for flats and houses'; the output shows a retrieved document chunk with its chunk_id and content." loading="lazy">
+            </button>
+            <figcaption>The retrieval trace: the query in, the retrieved chunk out.</figcaption>
+          </figure>
+
+          <figure class="shot">
+            <button class="shot-btn" type="button" data-lightbox data-caption="Needle-in-a-haystack: the inserted fact retrieved and cited, with a 'Sourced fact' vs 'General explanation' split.">
+              <img src="assets/02-grounded-luis-colour-answer.png" width="1470" height="1247" alt="Agent playground answering 'What is Luis's favourite house colour?' with 'Sourced fact — According to the uploaded document, Luis's favourite house colour is red', a citation marker, and a separate 'General explanation' paragraph." loading="lazy">
+            </button>
+            <figcaption>Needle-in-a-haystack: the inserted fact retrieved and cited, with a "Sourced fact" vs "General explanation" split.</figcaption>
+          </figure>
+
+          <figure class="shot">
+            <button class="shot-btn" type="button" data-lightbox data-caption="Trace showing knowledge_base_retrieve as an explicit tool call, between mcp_list_tools and message.">
+              <img src="assets/03-trace-knowledge-base-retrieve.png" width="713" height="250" alt="Conversation trace listing three tool calls in order: mcp_list_tools, kb-property-kb-knowled-wakrt: knowledge_base_retrieve, and message, all marked completed." loading="lazy">
+            </button>
+            <figcaption>Trace showing <code>knowledge_base_retrieve</code> as an explicit tool call.</figcaption>
+          </figure>
+
+          <figure class="shot">
+            <button class="shot-btn" type="button" data-lightbox data-caption="The property-kb-knowledge knowledge base attached to the agent.">
+              <img src="assets/04-knowledge-attached-property-agent.png" width="501" height="172" alt="Agent configuration panel, Knowledge section, listing property-kb-knowledge as an attached knowledge base." loading="lazy">
+            </button>
+            <figcaption>Knowledge base attached to the agent.</figcaption>
+          </figure>
+
+          <figure class="shot">
+            <button class="shot-btn" type="button" data-lightbox data-caption="The index right after creation: 0 documents, before the bug was fixed.">
+              <img src="assets/01-empty-property-kb-index.png" width="1495" height="973" alt="Azure portal view of the property-kb index showing Documents: 0, Total storage: 0 bytes, and an empty Search explorer." loading="lazy">
+            </button>
+            <figcaption>The index right after creation: 0 documents, before the bug was fixed.</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. Learned -->
+    <section class="section" id="learned">
+      <div class="container">
+        <h2>Three things learned</h2>
+        <div class="cards">
+          <article class="card">
+            <h3>Agentic retrieval is a decision, not a default</h3>
+            <p>With generic instructions, the agent answered a vague question from the model alone and never called the knowledge base — visible only in the Traces tab, not in the chat output. Rewriting the instructions ("always search first; answer only from retrieved documents; say when nothing is found") fixed it.</p>
+          </article>
+          <article class="card">
+            <h3>Resource <em>kind</em> matters</h3>
+            <p><code>AIServices</code> and <code>OpenAI</code> resources look identical from the REST API. The difference between them was the entire bug — and it only showed up when a different Azure service made the call.</p>
+          </article>
+          <article class="card">
+            <h3>A known gap, left honest</h3>
+            <p>Asked about Japanese mortgage rates (not in the corpus), the agent correctly refused to invent a number — but said "no live web lookup available" instead of the spec's "not found in the supplied sources." Documented as a limitation, not hidden.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. Resources -->
+    <section class="section section-alt" id="resources">
+      <div class="container">
+        <h2>Azure resources</h2>
+        <div class="table-wrap">
+          <table class="resources">
+            <thead>
+              <tr><th scope="col">Resource</th><th scope="col">Name</th><th scope="col">Purpose</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Resource group</td><td><code>rg-property-kb</code></td><td>uksouth</td></tr>
+              <tr><td>Storage account</td><td><code>stpropertykb001</code></td><td>Source docs, container <code>property-docs</code></td></tr>
+              <tr><td>Azure AI Search</td><td><code>srch-property-kb</code></td><td>Index, indexer, skillset, data source</td></tr>
+              <tr><td>Search index</td><td><code>property-kb</code></td><td>391 chunks: text + vectors + metadata</td></tr>
+              <tr><td>Foundry resource</td><td><code>luisjlop-1485-resource</code></td><td>Kind <code>AIServices</code>, swedencentral — hosts the chat model</td></tr>
+              <tr><td>Chat deployment</td><td><code>gpt-5-mini</code></td><td>Grounded generation</td></tr>
+              <tr><td>OpenAI resource</td><td><code>property-kb-openai</code></td><td>Kind <code>OpenAI</code>, uksouth — embedding model for the indexer</td></tr>
+              <tr><td>Embedding deployment</td><td><code>text-embedding-3-small</code></td><td>1536-dim vectors</td></tr>
+              <tr><td>Knowledge base</td><td><code>property-kb-knowledge</code></td><td>Foundry IQ, extractive mode</td></tr>
+              <tr><td>Agent</td><td><code>property-agent</code></td><td><code>gpt-5-mini</code> + <code>property-kb-knowledge</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. Code & docs -->
+    <section class="section" id="code">
+      <div class="container">
+        <h2>Code &amp; docs</h2>
+        <div class="code-grid">
+          <div>
+            <h3>Scripts</h3>
+            <ul class="linklist">
+              <li><a href="https://github.com/LuisJLopez/azure-rag-property-assistant/blob/main/scripts/upload_docs.py" rel="noopener"><code>scripts/upload_docs.py</code></a> — downloads the PDFs and uploads them to Blob Storage (<code>az login</code> auth)</li>
+              <li><a href="https://github.com/LuisJLopez/azure-rag-property-assistant/blob/main/foundry_scripts/chat.py" rel="noopener"><code>foundry_scripts/chat.py</code></a>, <a href="https://github.com/LuisJLopez/azure-rag-property-assistant/blob/main/foundry_scripts/embed.py" rel="noopener"><code>embed.py</code></a> — sanity checks for the two deployments</li>
+              <li><a href="https://github.com/LuisJLopez/azure-rag-property-assistant/blob/main/foundry_scripts/mini_rag_demo.py" rel="noopener"><code>foundry_scripts/mini_rag_demo.py</code></a> — a hand-rolled RAG loop: embed → cosine similarity → generate, built before the real index existed</li>
+            </ul>
+
+            <p class="code-note">Real output from <code>mini_rag_demo.py</code>. Four hardcoded facts, ranked by cosine similarity to the question; the top hit is handed to the chat model as the only evidence.</p>
+            <pre class="codeblock" tabindex="0"><code>Question: My name is Luis, what is my favourite colour?
+
+Retrieval ranking (most relevant first):
+  0.6992  Luis's favourite house colour is yellow.
+  0.5679  Luis's favourite food is pizza.
+  0.0383  A leasehold flat's lease can be extended by paying the freeholder a premium.
+  0.0327  The gov.uk How to Lease guide explains ground rent and service charges.
+
+Retrieved evidence: Luis's favourite house colour is yellow.
+Generated answer: Yellow.</code></pre>
+            <p class="code-note code-note-muted">That demo fact says <em>yellow</em>; the later needle-in-a-haystack document in the real index says <em>red</em>. Both are reported here exactly as they ran.</p>
+          </div>
+
+          <div>
+            <h3>Documentation</h3>
+            <ul class="linklist">
+              <li><a href="https://github.com/LuisJLopez/azure-rag-property-assistant/blob/main/01-property-assistant-idea-and-goal.md" rel="noopener">01 · Idea and goal</a> — scope, definition of done</li>
+              <li><a href="https://github.com/LuisJLopez/azure-rag-property-assistant/blob/main/02-getting-started-plan.md" rel="noopener">02 · Getting-started plan</a> — the six steps</li>
+              <li><a href="https://github.com/LuisJLopez/azure-rag-property-assistant/blob/main/03-embeddings-explained.md" rel="noopener">03 · Embeddings explained</a> — why two models</li>
+              <li><a href="https://github.com/LuisJLopez/azure-rag-property-assistant/blob/main/04-indexing-fix-notes.md" rel="noopener">04 · Indexing fix notes</a> — the bug, end to end</li>
+              <li><a href="https://github.com/LuisJLopez/azure-rag-property-assistant/blob/main/05-learning-outcomes.md" rel="noopener">05 · Learning outcomes</a> — each concept tied to evidence</li>
+              <li><a href="https://github.com/LuisJLopez/azure-rag-property-assistant/blob/main/learning_plan_status.md" rel="noopener">learning_plan_status.md</a> — progress log and resource inventory</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <p>Built in one day as a learning exercise. All documents are public UK government and parliamentary guidance. Resources will be deleted.</p>
+      <a href="https://github.com/LuisJLopez/azure-rag-property-assistant" rel="noopener">github.com/LuisJLopez/azure-rag-property-assistant</a>
+    </div>
+  </footer>
+
+  <div class="lightbox" hidden role="dialog" aria-modal="true" aria-label="Enlarged screenshot" data-lightbox-root>
+    <button class="lightbox-close" type="button" aria-label="Close" data-lightbox-close>&times;</button>
+    <figure class="lightbox-figure">
+      <img alt="" data-lightbox-img>
+      <figcaption data-lightbox-caption></figcaption>
+    </figure>
+  </div>
+
+  <script src="script.js" defer></script>
+</body>
+</html>
