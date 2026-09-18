@@ -74,9 +74,9 @@ az search service update \
 
 ```
 az role assignment create \
-  --assignee "a9d289aa-e439-4c71-b922-cef40a6c4006" \
+  --assignee "<search-service-managed-identity-principal-id>" \
   --role "Storage Blob Data Reader" \
-  --scope "/subscriptions/fa38711b-66e1-4a84-bb22-162c491d2b56/resourceGroups/rg-property-kb/providers/Microsoft.Storage/storageAccounts/stpropertykb001"
+  --scope "/subscriptions/<subscription-id>/resourceGroups/rg-property-kb/providers/Microsoft.Storage/storageAccounts/stpropertykb001"
 ```
 
 ## Screenshot
