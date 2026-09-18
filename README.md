@@ -26,6 +26,10 @@ Full spec: [01-property-assistant-idea-and-goal.md](01-property-assistant-idea-a
    discovering Azure AI Search's embedding skill doesn't reliably call a
    deployment hosted on the newer `AIServices` resource kind — see
    [04-indexing-fix-notes.md](04-indexing-fix-notes.md).
+6. Ran a needle-in-a-haystack test: added a one-line fact document
+   ("Luis's favourite house colour is red") to the corpus, re-indexed, and
+   confirmed the agent retrieved and cited that exact fact rather than
+   guessing from general knowledge.
 
 ## Architecture
 
@@ -100,7 +104,7 @@ cd ../foundry_scripts && uv sync && uv run chat.py "your question"
 
 ## Status
 
-Working end to end: 4 documents indexed (391 chunks), grounded answers with
-inline citations, sourced-vs-general distinction, and knowledge-base
-retrieval confirmed via traces. Full detail in
-[learning_plan_status.md](learning_plan_status.md).
+Working end to end: 5 documents indexed (391 chunks — 4 PDFs plus the
+needle-in-a-haystack test file), grounded answers with inline citations,
+sourced-vs-general distinction, and knowledge-base retrieval confirmed via
+traces. Full detail in [learning_plan_status.md](learning_plan_status.md).
