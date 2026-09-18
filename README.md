@@ -6,6 +6,8 @@ Foundry. Built to learn Blob Storage, indexing, embeddings, vector/hybrid
 retrieval, and grounded generation hands-on — not a production system, and
 not financial or property advice.
 
+![Grounded, cited answer comparing flats and houses](screenshots/05-flats-vs-houses-comparison.png)
+
 Full spec: [01-property-assistant-idea-and-goal.md](01-property-assistant-idea-and-goal.md).
 
 ## What this does
